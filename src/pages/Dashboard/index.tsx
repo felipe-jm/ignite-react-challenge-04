@@ -1,4 +1,4 @@
-import { Component, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Header from "../../components/Header";
 import api from "../../services/api";
@@ -7,7 +7,7 @@ import ModalAddFood from "../../components/ModalAddFood";
 import ModalEditFood from "../../components/ModalEditFood";
 import { FoodsContainer } from "./styles";
 
-type TFood = {
+export type FoodType = {
   id: number;
   name: string;
   description: string;
@@ -17,16 +17,15 @@ type TFood = {
 };
 
 const Dashboard = () => {
-  const [foods, setFoods] = useState<TFood[]>([]);
-  const [editingFood, setEditingFood] = useState<TFood>();
+  const [foods, setFoods] = useState<FoodType[]>([]);
+  const [editingFood, setEditingFood] = useState<FoodType>();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     api.get("foods").then((response) => setFoods(response.data));
   }, []);
 
-  const handleAddFood = async (food: TFood) => {
+  const handleAddFood = async (food: FoodType) => {
     try {
       const response = await api.post("/foods", {
         ...food,
@@ -39,7 +38,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleUpdateFood = async (food: TFood) => {
+  const handleUpdateFood = async (food: FoodType) => {
     try {
       if (!editingFood) return;
 
@@ -52,7 +51,7 @@ const Dashboard = () => {
         f.id !== foodUpdated.data.id ? f : foodUpdated.data
       );
 
-      setFoods([...foods, ...foodsUpdated]);
+      setFoods(foodsUpdated);
     } catch (err) {
       console.log(err);
     }
@@ -63,32 +62,30 @@ const Dashboard = () => {
 
     const foodsFiltered = foods.filter((food) => food.id !== id);
 
-    setFoods([...foods, ...foodsFiltered]);
+    setFoods(foodsFiltered);
   };
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
 
-  const toggleEditModal = () => {
-    setIsEditModalOpen(!isEditModalOpen);
-  };
-
-  const handleEditFood = (food: TFood) => {
+  const handleEditFood = (food: FoodType) => {
     setEditingFood(food);
   };
 
   return (
     <>
       <Header openModal={toggleModal} />
+
       <ModalAddFood
         isOpen={isModalOpen}
-        setIsOpen={toggleModal}
+        onRequestClose={toggleModal}
         handleAddFood={handleAddFood}
       />
+
       <ModalEditFood
-        isOpen={isEditModalOpen}
-        setIsOpen={toggleEditModal}
+        isOpen={!!editingFood}
+        onRequestClose={() => setEditingFood(undefined)}
         editingFood={editingFood}
         handleUpdateFood={handleUpdateFood}
       />
